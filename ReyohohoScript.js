@@ -314,4 +314,37 @@ function createVideoDetails(movieInfo, players, kpId) {
 		id: new PlatformID(PLATFORM, kpId.toString(), config.id),
 		name: title,
 		description: description,
-		thumbnails: new Thumbnails([new Thumbnail
+		thumbnails: new Thumbnails([new Thumbnail(thumbnail, 1)]),
+		author: new PlatformAuthorLink(
+			new PlatformID(PLATFORM, "reyohoho", config.id),
+			"ReYohoho", BASE_URL, "", 0
+		),
+		uploadDate: year ? new Date(year, 0, 1).getTime() / 1000 : 0,
+		url: "https://www.kinopoisk.ru/film/" + kpId + "/",
+		duration: duration,
+		viewCount: 0,
+		isLive: false,
+		video: videoSources,
+		live: null,
+		dash: null,
+		hls: null
+	});
+}
+
+function createCommentFromApiData(comment) {
+	if (!comment) return null;
+	return new Comment({
+		contextUrl: "https://www.kinopoisk.ru/film/" + (comment.movie_id || "0") + "/",
+		author: new PlatformAuthorLink(
+			new PlatformID(PLATFORM, (comment.user_id || "0").toString(), config.id),
+			comment.username || "Anonymous", "", "", 0
+		),
+		message: comment.content || "",
+		rating: new RatingLikes(comment.likes || 0),
+		date: comment.created_at ? new Date(comment.created_at).getTime() / 1000 : 0,
+		replyCount: comment.replies_count || 0,
+		context: {}
+	});
+}
+
+log("ReYohoho plugin LOADED");
