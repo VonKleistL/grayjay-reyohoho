@@ -6,345 +6,300 @@ var config = {};
 var authToken = null;
 var API_BASE = DEFAULT_API_URL;
 
+// Helper function to make API requests
+function makeRequest(url, options = {}) {
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers
+    };
+    
+    if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    
+    return http.request({
+        url: url,
+        method: options.method || 'GET',
+        headers: headers,
+        body: options.body
+    });
+}
+
 source.enable = function(conf, settings, savedState) {
-	config = conf ?? {};
-	if (savedState && savedState.token) {
-		authToken = savedState.token;
-	}
-	if (settings && settings.apiUrl && settings.apiUrl.trim() !== "") {
-		API_BASE = settings.apiUrl.trim();
-	} else {
-		API_BASE = DEFAULT_API_URL;
-	}
-	log("ReYohoho plugin enabled");
-}
-
-source.saveState = function() {
-	return { token: authToken, lastSync: Date.now(), apiUrl: API_BASE };
-}
-
-source.disable = function() {
-	log("ReYohoho plugin disabled");
-}
-
-source.getHome = function() {
-	try {
-		const topResults = getTopContent("all", "all", 30);
-		if (!topResults || topResults.length === 0) {
-			return new ContentPager([], false);
-		}
-		const videos = [];
-		for (let i = 0; i < topResults.length; i++) {
-			const video = createVideoFromApiData(topResults[i]);
-			if (video) videos.push(video);
-		}
-		return new ContentPager(videos, false);
-	} catch (e) {
-		log("Error: " + e);
-		return new ContentPager([], false);
-	}
+    config = conf ?? {};
+    if (savedState && savedState.token) {
+        authToken = savedState.token;
+    }
+    if (settings && settings.apiUrl && settings.apiUrl.trim() !== "") {
+        API_BASE = settings.apiUrl.trim();
+    } else {
+        API_BASE = DEFAULT_API_URL;
+    }
+    log("ReYohoho plugin enabled with API: " + API_BASE);
 };
 
-source.searchSuggestions = function(query) { return []; };
+source.saveState = function() {
+    return { token: authToken, lastSync: Date.now(), apiUrl: API_BASE };
+};
 
-source.getSearchCapabilities = () => {
-	return { types: [Type.Feed.Videos], sorts: [Type.Order.Chronological], filters: [] };
+source.disable = function() {
+    log("ReYohoho plugin disabled");
+};
+
+// Get home/browse content
+source.getHome = function() {
+    try {
+        const response = makeRequest(`${API_BASE}/top/all?type=all&limit=30`);
+        
+        if (!response.isOk) {
+            return new ContentPager([], false);
+        }
+        
+        const data = JSON.parse(response.body);
+        const videos = [];
+        
+        if (data && Array.isArray(data)) {
+            for (let i = 0; i < data.length; i++) {
+                const item = data[i];
+                const video = createVideoFromApiData(item);
+                if (video) videos.push(video);
+            }
+        }
+        
+        return new ContentPager(videos, false);
+    } catch (e) {
+        log("Error in getHome: " + e);
+        return new ContentPager([], false);
+    }
+};
+
+// Search functionality
+source.searchSuggestions = function(query) {
+    return [];
 };
 
 source.search = function(query, type, order, filters) {
-	try {
-		if (!query || query.trim() === "") return new ContentPager([], false);
-		const searchResults = apiSearch(query.trim());
-		if (!searchResults || searchResults.length === 0) return new ContentPager([], false);
-		const videos = [];
-		for (let i = 0; i < searchResults.length; i++) {
-			const video = createVideoFromApiData(searchResults[i]);
-			if (video) videos.push(video);
-		}
-		return new ContentPager(videos, false);
-	} catch (e) {
-		log("Search error: " + e);
-		return new ContentPager([], false);
-	}
-};
-
-source.getSearchChannelContentsCapabilities = function() {
-	return { types: [Type.Feed.Videos], sorts: [Type.Order.Chronological], filters: [] };
-};
-
-source.searchChannelContents = function(channelUrl, query, type, order, filters) {
-	throw new ScriptException("Channel search not supported");
+    return searchContent(query, 0);
 };
 
 source.searchChannels = function(query) {
-	return new ChannelPager([], false);
+    return new ChannelPager([], false);
 };
 
-source.isChannelUrl = function(url) { return false; };
-source.getChannel = function(url) { throw new ScriptException("Channels not supported"); };
-source.getChannelContents = function(url) { throw new ScriptException("Channels not supported"); };
-
-source.isContentDetailsUrl = function(url) {
-	if (!url) return false;
-	return url.includes("reyohoho.github.io") || url.includes("reyohoho.gitlab.io") ||
-	       url.includes("kinopoisk.ru") || url.includes("shikimori.one") || url.includes("imdb.com");
-};
-
-source.getContentDetails = function(url) {
-	try {
-		let kpId = null;
-		let contentType = "movie";
-		
-		if (url.includes("kinopoisk.ru")) {
-			const match = url.match(/film\/(\d+)/);
-			kpId = match ? match[1] : null;
-		} else if (url.includes("shikimori.one")) {
-			const match = url.match(/animes\/(\d+)/);
-			if (match) {
-				kpId = convertShikiToKp(match[1]);
-				contentType = "anime";
-			}
-		} else if (url.includes("imdb.com")) {
-			const match = url.match(/title\/(tt\d+)/);
-			if (match) kpId = convertImdbToKp(match[1]);
-		}
-		
-		if (!kpId) throw new ScriptException("Could not extract content ID");
-		
-		const movieInfo = getKpInfo(kpId);
-		const players = getPlayers(kpId, contentType);
-		return createVideoDetails(movieInfo, players, kpId);
-	} catch (e) {
-		log("Error: " + e);
-		throw e;
-	}
-};
-
-source.getComments = function(url) {
-	try {
-		const kpId = extractKpId(url);
-		if (!kpId) return new CommentPager([], false);
-		const commentsData = getComments(kpId);
-		if (!commentsData || commentsData.length === 0) return new CommentPager([], false);
-		const formatted = [];
-		for (let i = 0; i < commentsData.length; i++) {
-			const comment = createCommentFromApiData(commentsData[i]);
-			if (comment) formatted.push(comment);
-		}
-		return new CommentPager(formatted, false);
-	} catch (e) {
-		log("Error: " + e);
-		return new CommentPager([], false);
-	}
+function searchContent(query, page) {
+    try {
+        const response = makeRequest(`${API_BASE}/search/${encodeURIComponent(query)}`);
+        
+        if (!response.isOk) {
+            return new ContentPager([], false);
+        }
+        
+        const data = JSON.parse(response.body);
+        const videos = [];
+        
+        if (data && Array.isArray(data)) {
+            for (let i = 0; i < data.length; i++) {
+                const item = data[i];
+                const video = createVideoFromApiData(item);
+                if (video) videos.push(video);
+            }
+        }
+        
+        return new ContentPager(videos, false);
+    } catch (e) {
+        log("Error in search: " + e);
+        return new ContentPager([], false);
+    }
 }
+
+// Get video details
+source.getContentDetails = function(url) {
+    try {
+        // Extract kpId from URL
+        const kpId = extractKpIdFromUrl(url);
+        if (!kpId) {
+            throw new Error("Could not extract kpId from URL");
+        }
+        
+        const response = makeRequest(`${API_BASE}/kp_info2/${kpId}`);
+        
+        if (!response.isOk) {
+            throw new Error("Failed to get content details");
+        }
+        
+        const data = JSON.parse(response.body);
+        
+        return new PlatformVideoDetails({
+            id: new PlatformID(PLATFORM, kpId, config.id),
+            name: data.name || data.title || "Unknown Title",
+            thumbnails: new Thumbnails([new Thumbnail(data.poster || "", 0)]),
+            author: new PlatformAuthorLink(
+                new PlatformID(PLATFORM, "", config.id),
+                "ReYohoho",
+                BASE_URL,
+                null
+            ),
+            uploadDate: Math.floor(Date.now() / 1000),
+            duration: 0,
+            viewCount: 0,
+            url: url,
+            isLive: false,
+            description: data.description || "",
+            video: new VideoSourceDescriptor([]),
+            live: null,
+            rating: new RatingLikes(data.rating || 0),
+            subtitles: []
+        });
+    } catch (e) {
+        log("Error in getContentDetails: " + e);
+        throw e;
+    }
+};
+
+// Get video sources/streams
+source.getVideoSources = function(url) {
+    try {
+        const kpId = extractKpIdFromUrl(url);
+        if (!kpId) {
+            return [];
+        }
+        
+        // Get players for the content
+        const response = http.POST(
+            `${API_BASE}/cache`,
+            "kinopoisk=" + kpId + "&type=movie",
+            {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            false
+        );
+        
+        if (!response.isOk) {
+            return [];
+        }
+        
+        const data = JSON.parse(response.body);
+        const sources = [];
+        
+        // Process player data and extract video sources
+        if (data && data.players && Array.isArray(data.players)) {
+            for (let i = 0; i < data.players.length; i++) {
+                const player = data.players[i];
+                if (player.url) {
+                    sources.push(new VideoUrlSource({
+                        url: player.url,
+                        name: player.name || "Source " + (i + 1),
+                        width: 1920,
+                        height: 1080,
+                        container: "application/x-mpegurl",
+                        codec: "",
+                        bitrate: 0,
+                        duration: 0
+                    }));
+                }
+            }
+        }
+        
+        return sources;
+    } catch (e) {
+        log("Error in getVideoSources: " + e);
+        return [];
+    }
+};
+
+// Get comments
+source.getComments = function(url) {
+    try {
+        const kpId = extractKpIdFromUrl(url);
+        if (!kpId) {
+            return new CommentPager([], false, {});
+        }
+        
+        const response = makeRequest(`${API_BASE}/comments/${kpId}`);
+        
+        if (!response.isOk) {
+            return new CommentPager([], false, {});
+        }
+        
+        const data = JSON.parse(response.body);
+        const comments = [];
+        
+        if (data && Array.isArray(data)) {
+            for (let i = 0; i < data.length; i++) {
+                const comment = data[i];
+                comments.push(new Comment({
+                    contextUrl: url,
+                    author: new PlatformAuthorLink(
+                        new PlatformID(PLATFORM, comment.user_id || "", config.id),
+                        comment.username || "Anonymous",
+                        BASE_URL,
+                        null
+                    ),
+                    message: comment.content || "",
+                    rating: new RatingLikes(comment.rating || 0),
+                    date: comment.created_at ? new Date(comment.created_at).getTime() / 1000 : Date.now() / 1000,
+                    replyCount: comment.reply_count || 0,
+                    context: { commentId: comment.id }
+                }));
+            }
+        }
+        
+        return new CommentPager(comments, false, {});
+    } catch (e) {
+        log("Error in getComments: " + e);
+        return new CommentPager([], false, {});
+    }
+};
 
 source.getSubComments = function(comment) {
-	return new CommentPager([], false);
-}
+    return new CommentPager([], false, {});
+};
 
-function makeApiRequest(endpoint, method, body, isFormData) {
-	method = method || "GET";
-	isFormData = isFormData || false;
-	const url = API_BASE + endpoint;
-	const headers = {
-		"Content-Type": isFormData ? "application/x-www-form-urlencoded" : "application/json",
-		"User-Agent": "Grayjay-ReYohoho/1.0"
-	};
-	if (authToken) headers["Authorization"] = "Bearer " + authToken;
-	
-	try {
-		let response;
-		if (method === "GET") {
-			response = http.GET(url, headers);
-		} else if (method === "POST") {
-			response = http.POST(url, body || "", headers);
-		} else if (method === "PUT") {
-			response = http.request(url, "PUT", body || "", headers);
-		} else if (method === "DELETE") {
-			response = http.request(url, "DELETE", "", headers);
-		}
-		
-		if (!response || !response.body) return null;
-		if (response.code && response.code >= 400) return null;
-		return JSON.parse(response.body);
-	} catch (e) {
-		log("API error: " + e);
-		return null;
-	}
-}
-
-function apiSearch(searchTerm) {
-	const data = makeApiRequest("/search/" + encodeURIComponent(searchTerm));
-	if (!data) return [];
-	if (Array.isArray(data)) return data;
-	if (data.results && Array.isArray(data.results)) return data.results;
-	if (data.movies && Array.isArray(data.movies)) return data.movies;
-	return [];
-}
-
-function getKpInfo(kpId) {
-	const data = makeApiRequest("/kp_info2/" + kpId);
-	if (!data) throw new ScriptException("Failed to fetch info");
-	return data;
-}
-
-function getShikiInfo(shikiId) {
-	return makeApiRequest("/shiki_info/" + shikiId);
-}
-
-function getPlayers(kpId, type) {
-	type = type || "movie";
-	const body = "kinopoisk=" + encodeURIComponent(kpId) + "&type=" + encodeURIComponent(type);
-	const data = makeApiRequest("/cache", "POST", body, true);
-	if (!data) return [];
-	if (Array.isArray(data)) return data;
-	if (data.players && Array.isArray(data.players)) return data.players;
-	return [];
-}
-
-function getPlayersShiki(shikiId, type) {
-	type = type || "anime";
-	const body = "shikimori=" + encodeURIComponent(shikiId) + "&type=" + encodeURIComponent(type);
-	const data = makeApiRequest("/cache_shiki", "POST", body, true);
-	if (!data) return [];
-	if (Array.isArray(data)) return data;
-	if (data.players && Array.isArray(data.players)) return data.players;
-	return [];
-}
-
-function convertImdbToKp(imdbId) {
-	const data = makeApiRequest("/imdb_to_kp/" + imdbId);
-	return (data && data.kp_id) ? data.kp_id.toString() : null;
-}
-
-function convertShikiToKp(shikiId) {
-	const data = makeApiRequest("/shiki_to_kp/" + shikiId);
-	return (data && data.kp_id) ? data.kp_id.toString() : null;
-}
-
-function getTopContent(timeframe, typeFilter, limit) {
-	timeframe = timeframe || "all";
-	typeFilter = typeFilter || "all";
-	limit = limit || 20;
-	const data = makeApiRequest("/top/" + timeframe + "?type=" + typeFilter + "&limit=" + limit);
-	if (!data) return [];
-	if (Array.isArray(data)) return data;
-	if (data.results && Array.isArray(data.results)) return data.results;
-	return [];
-}
-
-function getDiscussed(type) {
-	type = type || "hot";
-	const data = makeApiRequest("/discussed/" + type);
-	if (!data) return [];
-	if (data.results && Array.isArray(data.results)) return data.results;
-	return [];
-}
-
-function getChance() {
-	return makeApiRequest("/chance");
-}
-
-function getComments(movieId) {
-	const data = makeApiRequest("/comments/" + movieId);
-	if (!data) return [];
-	if (data.comments && Array.isArray(data.comments)) return data.comments;
-	return [];
-}
-
-function getTwitchStream(username) {
-	return makeApiRequest("/twitch/" + username);
-}
-
-function extractKpId(url) {
-	if (!url) return null;
-	if (url.includes("kinopoisk.ru")) {
-		const match = url.match(/film\/(\d+)/);
-		return match ? match[1] : null;
-	}
-	return null;
-}
-
+// Helper functions
 function createVideoFromApiData(item) {
-	if (!item) return null;
-	const kpId = item.kp_id || item.kinopoisk_id || item.id || "0";
-	const title = item.title || item.name || item.russian || item.original || "Unknown";
-	const thumbnail = item.poster || item.poster_url || item.thumbnail || "";
-	const year = item.year || item.release_year || 0;
-	const duration = item.duration || item.runtime || 0;
-	
-	return new PlatformVideo({
-		id: new PlatformID(PLATFORM, kpId.toString(), config.id),
-		name: title,
-		thumbnails: new Thumbnails([new Thumbnail(thumbnail, 1)]),
-		author: new PlatformAuthorLink(
-			new PlatformID(PLATFORM, "reyohoho", config.id),
-			"ReYohoho", BASE_URL, "", 0
-		),
-		uploadDate: year ? new Date(year, 0, 1).getTime() / 1000 : 0,
-		url: "https://www.kinopoisk.ru/film/" + kpId + "/",
-		duration: duration,
-		viewCount: 0,
-		isLive: false
-	});
+    try {
+        const kpId = item.kp_id || item.kinopoisk_id || item.id;
+        if (!kpId) return null;
+        
+        const url = `${BASE_URL}?kp=${kpId}`;
+        
+        return new PlatformVideo({
+            id: new PlatformID(PLATFORM, kpId.toString(), config.id),
+            name: item.name || item.title || "Unknown Title",
+            thumbnails: new Thumbnails([new Thumbnail(item.poster || item.thumbnail || "", 0)]),
+            author: new PlatformAuthorLink(
+                new PlatformID(PLATFORM, "", config.id),
+                "ReYohoho",
+                BASE_URL,
+                null
+            ),
+            uploadDate: Math.floor(Date.now() / 1000),
+            duration: 0,
+            viewCount: 0,
+            url: url,
+            isLive: false,
+            shareUrl: url
+        });
+    } catch (e) {
+        log("Error creating video from data: " + e);
+        return null;
+    }
 }
 
-function createVideoDetails(movieInfo, players, kpId) {
-	if (!movieInfo) throw new ScriptException("No info");
-	const title = movieInfo.title || movieInfo.name || movieInfo.russian || "Unknown";
-	const description = movieInfo.description || movieInfo.synopsis || "";
-	const thumbnail = movieInfo.poster || movieInfo.poster_url || "";
-	const year = movieInfo.year || movieInfo.release_year || 0;
-	const duration = movieInfo.duration || movieInfo.runtime || 0;
-	
-	let videoSources = null;
-	if (players && players.length > 0) {
-		const player = players[0];
-		const playerUrl = player.iframe_url || player.url || "";
-		if (playerUrl) {
-			videoSources = new VideoUrlSource({
-				url: playerUrl, width: 1920, height: 1080,
-				container: "video/mp4", codec: "h264",
-				name: player.name || "Source", duration: duration, bitrate: 0
-			});
-		}
-	}
-	
-	return new PlatformVideoDetails({
-		id: new PlatformID(PLATFORM, kpId.toString(), config.id),
-		name: title,
-		description: description,
-		thumbnails: new Thumbnails([new Thumbnail(thumbnail, 1)]),
-		author: new PlatformAuthorLink(
-			new PlatformID(PLATFORM, "reyohoho", config.id),
-			"ReYohoho", BASE_URL, "", 0
-		),
-		uploadDate: year ? new Date(year, 0, 1).getTime() / 1000 : 0,
-		url: "https://www.kinopoisk.ru/film/" + kpId + "/",
-		duration: duration,
-		viewCount: 0,
-		isLive: false,
-		video: videoSources,
-		live: null,
-		dash: null,
-		hls: null
-	});
+function extractKpIdFromUrl(url) {
+    try {
+        if (url.indexOf("kp=") !== -1) {
+            const parts = url.split("kp=");
+            if (parts.length > 1) {
+                const idPart = parts[1].split("&")[0];
+                return idPart;
+            }
+        }
+        return null;
+    } catch (e) {
+        log("Error extracting kpId: " + e);
+        return null;
+    }
 }
 
-function createCommentFromApiData(comment) {
-	if (!comment) return null;
-	return new Comment({
-		contextUrl: "https://www.kinopoisk.ru/film/" + (comment.movie_id || "0") + "/",
-		author: new PlatformAuthorLink(
-			new PlatformID(PLATFORM, (comment.user_id || "0").toString(), config.id),
-			comment.username || "Anonymous", "", "", 0
-		),
-		message: comment.content || "",
-		rating: new RatingLikes(comment.likes || 0),
-		date: comment.created_at ? new Date(comment.created_at).getTime() / 1000 : 0,
-		replyCount: comment.replies_count || 0,
-		context: {}
-	});
-}
-
-log("ReYohoho plugin LOADED");
+log("ReYohoho Source Loaded");
