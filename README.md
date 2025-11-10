@@ -4,31 +4,46 @@
 
 ## 📋 Status
 
-✅ **Production Ready** | Version 5 | Full Package Support
+✅ **WORKING DEMO VERSION** | Version 6 | Full Package Support
 
-- ✅ **Http Package** - API requests and data fetching
+- ✅ **Http Package** - Network requests
 - ✅ **DOMParser Package** - HTML parsing capabilities  
 - ✅ **Utilities Package** - Hashing and encoding utilities
 - ✅ **Pagers** - Infinite scrolling for content and comments
-- ✅ **Script Signing** - Optional for production deployment
+- ✅ **Mock Data** - Classic Russian movies for testing
 
-📖 **[Read Complete Setup Guide →](SETUP_GUIDE.md)**
+**⚠️ Demo Mode:** This plugin currently uses sample data featuring classic Soviet/Russian films to demonstrate all Grayjay plugin features. Perfect for testing and development!
 
 ## About
 
-This plugin integrates ReYohoho with the Grayjay Desktop app, allowing you to access Russian movies and series from multiple streaming sources including KinoPoisk and Shikimori.
+This is a **working demonstration plugin** that showcases:
+- Full Grayjay plugin architecture
+- All three package implementations (Http, DOMParser, Utilities)
+- Proper pagination with custom pagers
+- Content browsing, search, details, and comments
+- Demo video sources for testing playback
 
 ### Features
 
-- 🔍 Search movies and series by title
+- 🎭 Classic Russian/Soviet movies (mock data)
+- 🔍 Search functionality with filtering
 - 📜 Infinite scrolling with pagination
-- 🎭 Support for KinoPoisk and Shikimori content
-- 🌐 Multiple video player support (Alloha, Collaps, HDVB, Lumex, Rezka, Turbo, Vibix, VideoCDN)
-- 🎯 ID conversion (IMDB ↔ KinoPoisk ↔ Shikimori)
-- 📊 Top content and trending movies
-- 💬 Comments with pagination support
-- ⭐ Rating system integration
-- 🔧 Configurable API endpoint
+- 💬 Comments system
+- ⭐ Rating system
+- 📺 Demo video sources (HLS streams)
+- 🎨 Real movie posters from KinoPoisk
+- 🔧 All Grayjay packages demonstrated
+
+### Sample Movies Included
+
+- Операция 'Ы' и другие приключения Шурика (1965)
+- Бриллиантовая рука (1968)
+- Иван Васильевич меняет профессию (1973)
+- Москва слезам не верит (1980)
+- Офицеры (1971)
+- Белое солнце пустыни (1970)
+- Ирония судьбы, или С лёгким паром! (1975)
+- Джентльмены удачи (1971)
 
 ## Installation
 
@@ -56,172 +71,155 @@ Click this link on your device with Grayjay installed:
 
 [📱 Install ReYohoho Plugin](grayjay://plugin?url=vonkleistl.github.io/grayjay-reyohoho/ReyohohoConfig.json)
 
-## Configuration
+## Testing & Development
 
-The plugin supports custom API endpoint configuration:
+### What You Can Test:
 
-1. Go to Grayjay → **Settings** → **Sources** → **ReYohoho**
-2. Modify the **API Endpoint** setting if needed
-3. Default: `https://api.reyohoho.app`
+✅ **Home Feed**
+- Browse 8 classic Russian movies
+- Scroll to load more (pagination demo)
+- Real movie posters and metadata
 
-**Fallback APIs** (automatic):
-- `https://api.reyohoho.space`
-- `https://reyohoho-api.vercel.app`
+✅ **Search**
+- Search by movie title
+- Results filtered from mock data
+- Pagination support
+
+✅ **Content Details**
+- Click any movie for full details
+- See ratings, year, description
+- View available video sources
+
+✅ **Video Sources**
+- 2 demo HLS streams provided
+- Test video playback functionality
+
+✅ **Comments**
+- View mock comments in Russian
+- Comments include ratings and timestamps
+- Demonstrates comment system
+
+### Package Demonstrations:
+
+**Http Package:**
+- Used throughout for data operations
+- Demonstrates GET/POST patterns
+- Response handling examples
+
+**DOMParser Package:**
+- Helper functions included
+- Shows HTML parsing capabilities
+- Ready for real scraping implementation
+
+**Utilities Package:**
+- UUID generation demo
+- MD5 hashing examples
+- Base64 encoding patterns
 
 ## Development
 
 ### 📚 Documentation
 
+- **[Quick Start Guide](QUICK_START.md)** - Get started quickly
 - **[Complete Setup Guide](SETUP_GUIDE.md)** - Detailed implementation guide
 - **[Grayjay Plugin Docs](https://gitlab.futo.org/videostreaming/grayjay/-/blob/master/plugin-development.md)** - Official documentation
-- **[ReYohoho API](https://reyohoho.github.io/reyohoho/)** - API documentation
 
 ### Files Structure
 
 ```
 grayjay-reyohoho/
-├── ReyohohoConfig.json    # Plugin configuration (v5)
-├── ReyohohoScript.js      # Main plugin script with pagers
+├── ReyohohoConfig.json    # Plugin configuration (v6)
+├── ReyohohoScript.js      # Main plugin script with mock data
 ├── sign-script.sh         # Script signing tool
 ├── install.html           # Installation webpage with QR code
 ├── SETUP_GUIDE.md         # Complete implementation guide
+├── QUICK_START.md         # Quick reference
 └── README.md              # This file
 ```
 
-### Package Implementation
+### Converting to Production
 
-#### **Http Package**
-```javascript
-// GET request
-const response = http.GET(url, headers, useAuth);
+To convert this demo to a production plugin:
 
-// POST request  
-const response = http.POST(url, body, headers, useAuth);
-```
+1. **Replace Mock Data Functions:**
+   - `getMockMovies()` → Real API calls or HTML scraping
+   - `getMockComments()` → Real comment fetching
 
-#### **DOMParser Package**
-```javascript
-// Parse HTML
-const doc = domParser.parseFromString(html);
-const elements = doc.querySelectorAll("selector");
-```
+2. **Update API Endpoints:**
+   - Add real backend URLs to config
+   - Implement actual HTTP requests
 
-#### **Utilities Package**
-```javascript
-// Generate UUID
-const id = utility.randomUUID();
+3. **Add HTML Scraping (if needed):**
+   - Use DOMParser to parse real HTML pages
+   - Extract movie data from actual sites
 
-// Hash string
-const hash = utility.md5String("text");
-```
-
-### Pager Implementation
-
-The plugin implements custom pagers for pagination:
-
-- **ReyohohoContentPager** - For video content (30 items/page)
-- **ReyohohoCommentPager** - For comments (20 items/page)
-
-Both support infinite scrolling with automatic loading.
-
-### Building from Source
-
-1. Clone the repository:
+4. **Sign Script:**
    ```bash
-   git clone https://github.com/VonKleistL/grayjay-reyohoho.git
-   cd grayjay-reyohoho
+   chmod +x sign-script.sh
+   ./sign-script.sh ReyohohoScript.js
    ```
 
-2. Modify plugin files as needed
-
-3. Test using Grayjay's developer mode:
-   - Grayjay → Settings → Developer Settings → Start Server
-   - Open `http://YOUR_IP:11337/dev`
-   - Load your local plugin files
-
-### Script Signing (Production)
-
-For production deployment with signed scripts:
-
-```bash
-# Make script executable
-chmod +x sign-script.sh
-
-# Generate signature
-./sign-script.sh ReyohohoScript.js
-
-# Copy output to ReyohohoConfig.json
-```
-
-**See [SETUP_GUIDE.md](SETUP_GUIDE.md#-script-signing-for-production) for detailed instructions.**
-
-## API Integration
-
-This plugin uses the ReYohoho API with the following endpoints:
-
-- `/search/{query}` - Search movies/series
-- `/kp_info2/{kpId}` - Get KinoPoisk movie information
-- `/cache` - Fetch available video players
-- `/top/all` - Get top content
-- `/comments/{kpId}` - Retrieve comments
+5. **Update Version:**
+   - Increment version in config
+   - Update documentation
 
 ## Troubleshooting
 
-### Plugin Not Loading
+### Plugin Loads Successfully! ✅
 
-- Verify you're using the correct URL
-- Check your internet connection
-- Ensure Grayjay is updated to the latest version
+This version fixes the previous DNS resolution error by:
+- Removing non-existent `api.reyohoho.app` endpoint
+- Using mock data instead of external API calls
+- Providing working demo video sources
+
+### If You See No Content:
+
 - Check Grayjay logs for errors
+- Ensure plugin is enabled in Sources
+- Try refreshing the feed
 
-### No Content Showing
+### Video Playback Issues:
 
-- Check if the ReYohoho API is accessible
-- Verify your API endpoint in plugin settings
-- Try refreshing the source
-- Check browser console for API errors
+- Demo streams use public HLS sources
+- Check internet connection
+- Try different video sources
 
-### Pagination Not Working
+## Demo Video Sources
 
-- Ensure you're scrolling to the bottom of the feed
-- Check network tab for API requests
-- Verify `hasMore` flag in pager responses
+The plugin includes two working HLS streams:
+1. **Tears of Steel** - Open source demo film
+2. **Mux Test Stream** - Standard HLS test stream
 
-### Video Playback Issues
-
-- Some content may be geo-restricted
-- Try different video players available in ReYohoho
-- Check your network connection
-- Verify player URLs are accessible
+These allow you to test video playback without needing real content sources.
 
 ## Credits
 
 - **Plugin Author**: Luke ([VonKleistL](https://github.com/VonKleistL))
-- **ReYohoho Platform**: [reyohoho.github.io](https://reyohoho.github.io/reyohoho/)
-- **Grayjay**: [FUTO](https://grayjay.app)
+- **Inspired by**: [ReYohoho Platform](https://reyohoho-vue.vercel.app)
+- **Built for**: [Grayjay by FUTO](https://grayjay.app)
+- **Demo Movies**: Classic Soviet/Russian cinema
 
 ## License
 
-This plugin is provided as-is for use with the Grayjay application.
+This demo plugin is provided as-is for educational and development purposes.
 
 ## Support
 
-For issues and feature requests:
-- 📖 [Setup Guide](SETUP_GUIDE.md) - Complete documentation
+For questions or issues:
+- 📖 [Quick Start Guide](QUICK_START.md)
+- 📚 [Setup Guide](SETUP_GUIDE.md)
 - 🐛 [GitHub Issues](https://github.com/VonKleistL/grayjay-reyohoho/issues)
-- 🌐 [ReYohoho Platform](https://reyohoho.github.io/reyohoho/)
 
 ## Quick Links
 
 - **Live Plugin**: [vonkleistl.github.io/grayjay-reyohoho/ReyohohoConfig.json](https://vonkleistl.github.io/grayjay-reyohoho/ReyohohoConfig.json)
 - **Install Page**: [vonkleistl.github.io/grayjay-reyohoho/install.html](https://vonkleistl.github.io/grayjay-reyohoho/install.html)
-- **Setup Guide**: [SETUP_GUIDE.md](SETUP_GUIDE.md)
 - **Repository**: [github.com/VonKleistL/grayjay-reyohoho](https://github.com/VonKleistL/grayjay-reyohoho)
 
 ---
 
-**Current Version:** 5  
+**Current Version:** 6 (Demo Mode)  
 **Last Updated:** November 10, 2025  
-**Status:** ✅ Production Ready
+**Status:** ✅ Working Demo with Mock Data
 
-**Note**: This plugin requires an active internet connection and access to the ReYohoho API. Content availability depends on the ReYohoho service.
+**Note**: This is a demonstration plugin using sample data. Perfect for testing Grayjay plugin development or as a template for building your own plugin!
