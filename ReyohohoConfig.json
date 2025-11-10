@@ -7,8 +7,7 @@
 	"sourceUrl": "https://VonKleistL.github.io/grayjay-reyohoho/ReyohohoConfig.json",
 	"repositoryUrl": "https://github.com/reyohoho/reyohoho",
 	"scriptUrl": "./ReyohohoScript.js",
-2	
-	"iconUrl": "",
+    "version": 2,	"iconUrl": "",
 	"id": "a7f3b2c8-reyh-4ee9-9a1b-0242ac120003",
 	
 	"scriptSignature": "",
