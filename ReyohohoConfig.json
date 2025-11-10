@@ -3,6 +3,7 @@
 	"description": "Russian movie and series streaming aggregator with KinoPoisk and Shikimori support",
 	"author": "Luke",
 	"authorUrl": "https://github.com/VonKleistL",
+	    "platformUrl": "https://api.reyohoho.app",
 	
 	"sourceUrl": "https://VonKleistL.github.io/grayjay-reyohoho/ReyohohoConfig.json",
 	"repositoryUrl": "https://github.com/reyohoho/reyohoho",
@@ -23,6 +24,7 @@
 		"https://shikimori.one",
 		"https://www.imdb.com"
 	],
+	    "supportedClaimTypes": [1],
 	
 	"settings": [
 		{
