@@ -4,17 +4,15 @@
     "author": "Luke",
     "authorUrl": "https://github.com/VonKleistL",
 
-    "sourceUrl": "https://VonKleistL.github.io/grayjay-reyohoho/ReyohohoConfig.json",
+    "sourceUrl": "https://vonkleistl.github.io/grayjay-reyohoho/ReyohohoConfig.json",
     "repositoryUrl": "https://github.com/VonKleistL/grayjay-reyohoho",
-    "scriptUrl": "https://VonKleistL.github.io/grayjay-reyohoho/ReyohohoScript.js",
+    "scriptUrl": "https://vonkleistl.github.io/grayjay-reyohoho/ReyohohoScript.js",
     "version": 6,
     "iconUrl": "https://reyohoho-vue.vercel.app/favicon.ico",
     "id": "a7f3b2c8-reyh-4ee9-9a1b-0242ac120003",
-
     "scriptSignature": "",
     "scriptPublicKey": "",
     "packages": ["Http", "DOMParser", "Utilities"],
-
     "allowEval": false,
     "allowUrls": [
         "https://reyohoho-vue.vercel.app",
@@ -23,9 +21,7 @@
         "https://shikimori.one",
         "https://www.imdb.com"
     ],
-
     "supportedClaimTypes": [],
-
     "settings": [
         {
             "variable": "baseUrl",
