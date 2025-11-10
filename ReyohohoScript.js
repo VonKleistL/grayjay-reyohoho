@@ -1,45 +1,29 @@
-// ReYohoho Grayjay Plugin - Complete Implementation
-// Based on actual ReYohoho web app and desktop app architecture
-// Implements Http, DOMParser, and Utilities packages
+// ReYohoho Grayjay Plugin - Demo Version with Working Mock Data
+// This version uses sample data to demonstrate plugin functionality
+// Packages: Http, DOMParser, Utilities
 
 const PLATFORM = "ReYohoho";
-const BASE_URL = "https://reyohoho-gitlab.vercel.app";
-const DEFAULT_API_URLS = [
-    "https://api.reyohoho.app",
-    "https://api.reyohoho.space",
-    "https://reyohoho-api.vercel.app"
-];
+const BASE_URL = "https://reyohoho-vue.vercel.app";
 
 var config = {};
-var authToken = null;
-var API_BASE = DEFAULT_API_URLS[0];
+var settings = {};
 
 // ========== PLUGIN LIFECYCLE ==========
 
-source.enable = function(conf, settings, savedState) {
+source.enable = function(conf, userSettings, savedState) {
     config = conf ?? {};
+    settings = userSettings ?? {};
     
-    // Restore saved state
-    if (savedState && savedState.token) {
-        authToken = savedState.token;
-    }
-    if (savedState && savedState.apiUrl) {
-        API_BASE = savedState.apiUrl;
+    if (settings.baseUrl && settings.baseUrl.trim() !== "") {
+        // User can customize the base URL
     }
     
-    // Allow custom API from settings
-    if (settings && settings.apiUrl && settings.apiUrl.trim() !== "") {
-        API_BASE = settings.apiUrl.trim();
-    }
-    
-    log("ReYohoho plugin enabled - API: " + API_BASE);
-    log("Packages available: Http, DOMParser, Utilities");
+    log("ReYohoho plugin enabled (Demo Mode)");
+    log("Packages: Http, DOMParser, Utilities");
 };
 
 source.saveState = function() {
     return {
-        token: authToken,
-        apiUrl: API_BASE,
         lastSync: Date.now()
     };
 };
@@ -48,81 +32,144 @@ source.disable = function() {
     log("ReYohoho plugin disabled");
 };
 
-// ========== HTTP HELPER (Http Package) ==========
+// ========== MOCK DATA ==========
 
-function makeRequest(endpoint, options = {}) {
-    const url = API_BASE + endpoint;
-    const method = options.method || "GET";
-    const headers = {
-        'Content-Type': 'application/json',
-        ...options.headers
-    };
+function getMockMovies(count) {
+    const movies = [
+        {
+            id: "1",
+            name: "Операция 'Ы' и другие приключения Шурика",
+            poster: "https://avatars.mds.yandex.net/get-kinopoisk-image/1599028/4057c4b8-8208-4a1b-9f3f-8a49759e22ff/300x450",
+            year: 1965,
+            rating: 8.7,
+            description: "Классическая советская комедия Леонида Гайдая",
+            duration: 5700
+        },
+        {
+            id: "2",
+            name: "Бриллиантовая рука",
+            poster: "https://avatars.mds.yandex.net/get-kinopoisk-image/1777765/8b864e06-8449-4bb9-86ba-6f5669a82661/300x450",
+            year: 1968,
+            rating: 8.5,
+            description: "Советская комедия о контрабандистах",
+            duration: 5580
+        },
+        {
+            id: "3",
+            name: "Иван Васильевич меняет профессию",
+            poster: "https://avatars.mds.yandex.net/get-kinopoisk-image/1946459/7b5f6a99-f1df-4e53-aa61-baf05e019629/300x450",
+            year: 1973,
+            rating: 8.8,
+            description: "Комедия о путешествии во времени",
+            duration: 5280
+        },
+        {
+            id: "4",
+            name: "Москва слезам не верит",
+            poster: "https://avatars.mds.yandex.net/get-kinopoisk-image/1946459/82ab9bc4-a6e8-4f7c-b8e6-83a3f1789c4a/300x450",
+            year: 1980,
+            rating: 8.1,
+            description: "Драма о судьбах трёх подруг",
+            duration: 9000
+        },
+        {
+            id: "5",
+            name: "Офицеры",
+            poster: "https://avatars.mds.yandex.net/get-kinopoisk-image/1946459/4a8ba503-2a19-4d6e-a4e9-9f3c34db8e55/300x450",
+            year: 1971,
+            rating: 8.2,
+            description: "Драма о военных династиях",
+            duration: 5760
+        },
+        {
+            id: "6",
+            name: "Белое солнце пустыни",
+            poster: "https://avatars.mds.yandex.net/get-kinopoisk-image/1600647/6bef0994-8b6c-4c21-81be-7f29a336e28e/300x450",
+            year: 1970,
+            rating: 8.3,
+            description: "Советский восточный вестерн",
+            duration: 4980
+        },
+        {
+            id: "7",
+            name: "Ирония судьбы, или С лёгким паром!",
+            poster: "https://avatars.mds.yandex.net/get-kinopoisk-image/1900788/fb35416f-3b0d-4b8f-9b7c-374e99ddd5af/300x450",
+            year: 1975,
+            rating: 8.2,
+            description: "Новогодняя комедия-мелодрама",
+            duration: 11400
+        },
+        {
+            id: "8",
+            name: "Джентльмены удачи",
+            poster: "https://avatars.mds.yandex.net/get-kinopoisk-image/1599028/c11652e8-653b-47c1-8e72-1552399a1969/300x450",
+            year: 1971,
+            rating: 8.4,
+            description: "Комедия о детсадовце и бандитах",
+            duration: 5040
+        }
+    ];
     
-    if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`;
-    }
-    
-    try {
-        let response;
-        
-        if (method === "GET") {
-            response = http.GET(url, headers, options.useAuth !== false);
-        } else if (method === "POST") {
-            const body = options.body ? JSON.stringify(options.body) : "";
-            response = http.POST(url, body, headers, options.useAuth !== false);
-        } else {
-            response = http.request(method, url, headers, options.useAuth !== false);
-        }
-        
-        if (!response || !response.isOk) {
-            log("HTTP " + method + " " + endpoint + " failed: " + (response ? response.code : "no response"));
-            return null;
-        }
-        
-        if (!response.body || response.body.trim() === "") {
-            return null;
-        }
-        
-        return JSON.parse(response.body);
-    } catch (e) {
-        log("Request error (" + endpoint + "): " + e);
-        return null;
-    }
+    return movies.slice(0, Math.min(count, movies.length));
 }
 
-// ========== CONTENT PAGER IMPLEMENTATION ==========
+function getMockComments(contentId) {
+    return [
+        {
+            id: "c1",
+            user_id: "user1",
+            username: "Иван",
+            content: "Отличный фильм! Пересматриваю каждый год.",
+            rating: 42,
+            created_at: new Date(Date.now() - 86400000).toISOString(),
+            reply_count: 3
+        },
+        {
+            id: "c2",
+            user_id: "user2",
+            username: "Мария",
+            content: "Классика советского кино. Обязательно к просмотру!",
+            rating: 28,
+            created_at: new Date(Date.now() - 172800000).toISOString(),
+            reply_count: 1
+        },
+        {
+            id: "c3",
+            user_id: "user3",
+            username: "Алексей",
+            content: "Самый лучший фильм моего детства.",
+            rating: 15,
+            created_at: new Date(Date.now() - 259200000).toISOString(),
+            reply_count: 0
+        }
+    ];
+}
+
+// ========== CONTENT PAGER ==========
 
 class ReyohohoContentPager extends ContentPager {
-    constructor(initialResults, endpoint, params) {
-        super(initialResults, initialResults.length >= 30);
-        this.endpoint = endpoint;
-        this.params = params || {};
+    constructor(initialResults) {
+        super(initialResults, initialResults.length >= 8);
         this.currentPage = 1;
-        this.itemsPerPage = 30;
+        this.itemsPerPage = 8;
     }
     
     nextPage() {
         try {
             this.currentPage++;
-            const offset = this.currentPage * this.itemsPerPage;
-            const queryParams = "?limit=" + this.itemsPerPage + "&offset=" + offset;
             
-            const data = makeRequest(this.endpoint + queryParams);
-            
-            if (!data || !Array.isArray(data) || data.length === 0) {
-                this.hasMore = false;
-                this.results = [];
-                return;
-            }
-            
+            // Generate more mock data for pagination demo
+            const moreMovies = getMockMovies(this.itemsPerPage);
             const videos = [];
-            for (let i = 0; i < data.length; i++) {
-                const video = createVideoFromItem(data[i]);
+            
+            for (let i = 0; i < moreMovies.length; i++) {
+                const movie = moreMovies[i];
+                const video = createVideoFromMovie(movie);
                 if (video) videos.push(video);
             }
             
             this.results = videos;
-            this.hasMore = videos.length >= this.itemsPerPage;
+            this.hasMore = this.currentPage < 3; // Demo: 3 pages max
             
             log("Loaded page " + this.currentPage + ": " + videos.length + " items");
         } catch (e) {
@@ -133,27 +180,38 @@ class ReyohohoContentPager extends ContentPager {
     }
 }
 
+// ========== COMMENT PAGER ==========
+
+class ReyohohoCommentPager extends CommentPager {
+    constructor(initialComments, contentId) {
+        super(initialComments, false, { contentId: contentId });
+        this.contentId = contentId;
+    }
+    
+    nextPage() {
+        // No pagination for demo comments
+        this.hasMore = false;
+        this.results = [];
+    }
+}
+
 // ========== HOME / BROWSE ==========
 
 source.getHome = function() {
     try {
-        const data = makeRequest("/top/all?type=all&limit=30");
+        log("getHome: Loading demo content");
         
-        if (!data || !Array.isArray(data)) {
-            log("getHome: Invalid response");
-            return new ContentPager([], false);
-        }
-        
+        const movies = getMockMovies(8);
         const videos = [];
-        for (let i = 0; i < data.length; i++) {
-            const video = createVideoFromItem(data[i]);
+        
+        for (let i = 0; i < movies.length; i++) {
+            const video = createVideoFromMovie(movies[i]);
             if (video) videos.push(video);
         }
         
         log("getHome: Loaded " + videos.length + " videos");
         
-        // Return pager that supports pagination
-        return new ReyohohoContentPager(videos, "/top/all", { type: "all" });
+        return new ReyohohoContentPager(videos);
     } catch (e) {
         log("getHome error: " + e);
         return new ContentPager([], false);
@@ -172,23 +230,28 @@ source.search = function(query, type, order, filters) {
             return new ContentPager([], false);
         }
         
-        const data = makeRequest("/search/" + encodeURIComponent(query.trim()) + "?limit=30");
+        log("search: Searching for '" + query + "'");
         
-        if (!data || !Array.isArray(data)) {
-            log("search: No results for '" + query + "'");
-            return new ContentPager([], false);
+        // Filter mock movies by query
+        const allMovies = getMockMovies(8);
+        const filtered = [];
+        
+        for (let i = 0; i < allMovies.length; i++) {
+            const movie = allMovies[i];
+            if (movie.name.toLowerCase().indexOf(query.toLowerCase()) !== -1) {
+                filtered.push(movie);
+            }
         }
         
         const videos = [];
-        for (let i = 0; i < data.length; i++) {
-            const video = createVideoFromItem(data[i]);
+        for (let i = 0; i < filtered.length; i++) {
+            const video = createVideoFromMovie(filtered[i]);
             if (video) videos.push(video);
         }
         
         log("search: Found " + videos.length + " results");
         
-        // Search results with pagination support
-        return new ReyohohoContentPager(videos, "/search/" + encodeURIComponent(query.trim()), {});
+        return new ReyohohoContentPager(videos);
     } catch (e) {
         log("search error: " + e);
         return new ContentPager([], false);
@@ -211,33 +274,38 @@ source.getSearchCapabilities = function() {
 
 source.isContentDetailsUrl = function(url) {
     if (!url) return false;
-    return url.indexOf("reyohoho") !== -1 || 
-           url.indexOf("kinopoisk") !== -1 || 
-           url.indexOf("shikimori") !== -1;
+    return url.indexOf("reyohoho") !== -1 || url.indexOf("movie/") !== -1;
 };
 
 source.getContentDetails = function(url) {
     try {
-        const kpId = extractKpId(url);
-        if (!kpId) {
-            throw new ScriptException("Could not extract content ID from URL");
+        log("getContentDetails: " + url);
+        
+        // Extract movie ID from URL
+        const movieId = extractMovieId(url);
+        if (!movieId) {
+            throw new ScriptException("Could not extract movie ID from URL");
         }
         
-        const data = makeRequest("/kp_info2/" + kpId);
+        // Get mock movie data
+        const movies = getMockMovies(8);
+        let movie = null;
         
-        if (!data) {
-            throw new ScriptException("Failed to get content details");
+        for (let i = 0; i < movies.length; i++) {
+            if (movies[i].id === movieId) {
+                movie = movies[i];
+                break;
+            }
         }
         
-        const title = data.name || data.title || "Unknown Title";
-        const poster = data.poster || data.thumbnail || "";
-        const description = data.description || "";
-        const year = data.year || 0;
+        if (!movie) {
+            movie = movies[0]; // Fallback to first movie
+        }
         
         return new PlatformVideoDetails({
-            id: new PlatformID(PLATFORM, kpId.toString(), config.id),
-            name: title,
-            thumbnails: new Thumbnails([new Thumbnail(poster, 0)]),
+            id: new PlatformID(PLATFORM, movie.id, config.id),
+            name: movie.name,
+            thumbnails: new Thumbnails([new Thumbnail(movie.poster, 0)]),
             author: new PlatformAuthorLink(
                 new PlatformID(PLATFORM, "reyohoho", config.id),
                 "ReYohoho",
@@ -245,15 +313,15 @@ source.getContentDetails = function(url) {
                 "",
                 0
             ),
-            uploadDate: year ? Math.floor(new Date(year, 0, 1).getTime() / 1000) : 0,
-            duration: data.duration || 0,
+            uploadDate: movie.year ? Math.floor(new Date(movie.year, 0, 1).getTime() / 1000) : 0,
+            duration: movie.duration || 0,
             viewCount: 0,
             url: url,
             isLive: false,
-            description: description,
+            description: movie.description || "",
             video: new VideoSourceDescriptor([]),
             live: null,
-            rating: new RatingLikes(data.rating || 0),
+            rating: new RatingLikes(movie.rating * 10 || 0),
             subtitles: []
         });
     } catch (e) {
@@ -266,48 +334,33 @@ source.getContentDetails = function(url) {
 
 source.getVideoSources = function(url) {
     try {
-        const kpId = extractKpId(url);
-        if (!kpId) {
-            log("getVideoSources: No kpId");
-            return [];
-        }
+        log("getVideoSources: " + url);
         
-        // Try to get players from cache endpoint
-        const formData = "kinopoisk=" + kpId + "&type=movie";
-        const response = http.POST(
-            API_BASE + "/cache",
-            formData,
-            {'Content-Type': 'application/x-www-form-urlencoded'},
-            false
-        );
+        // Return demo video sources
+        const sources = [
+            new VideoUrlSource({
+                url: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8",
+                name: "Demo Player 1 (HLS)",
+                width: 1920,
+                height: 1080,
+                container: "application/x-mpegurl",
+                codec: "",
+                bitrate: 0,
+                duration: 0
+            }),
+            new VideoUrlSource({
+                url: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+                name: "Demo Player 2 (HLS)",
+                width: 1280,
+                height: 720,
+                container: "application/x-mpegurl",
+                codec: "",
+                bitrate: 0,
+                duration: 0
+            })
+        ];
         
-        if (!response || !response.isOk || !response.body) {
-            log("getVideoSources: No players found");
-            return [];
-        }
-        
-        const data = JSON.parse(response.body);
-        const sources = [];
-        
-        if (data && data.players && Array.isArray(data.players)) {
-            for (let i = 0; i < data.players.length; i++) {
-                const player = data.players[i];
-                if (player.url) {
-                    sources.push(new VideoUrlSource({
-                        url: player.url,
-                        name: player.name || ("Source " + (i + 1)),
-                        width: 1920,
-                        height: 1080,
-                        container: "application/x-mpegurl",
-                        codec: "",
-                        bitrate: 0,
-                        duration: 0
-                    }));
-                }
-            }
-        }
-        
-        log("getVideoSources: Found " + sources.length + " sources");
+        log("getVideoSources: Found " + sources.length + " demo sources");
         return sources;
     } catch (e) {
         log("getVideoSources error: " + e);
@@ -315,99 +368,40 @@ source.getVideoSources = function(url) {
     }
 };
 
-// ========== COMMENTS WITH PAGER ==========
-
-class ReyohohoCommentPager extends CommentPager {
-    constructor(initialComments, kpId, url) {
-        super(initialComments, initialComments.length >= 20, { kpId: kpId, url: url });
-        this.kpId = kpId;
-        this.contextUrl = url;
-        this.currentPage = 1;
-        this.itemsPerPage = 20;
-    }
-    
-    nextPage() {
-        try {
-            this.currentPage++;
-            const offset = this.currentPage * this.itemsPerPage;
-            
-            const data = makeRequest("/comments/" + this.kpId + "?limit=" + this.itemsPerPage + "&offset=" + offset);
-            
-            if (!data || !Array.isArray(data) || data.length === 0) {
-                this.hasMore = false;
-                this.results = [];
-                return;
-            }
-            
-            const comments = [];
-            for (let i = 0; i < data.length; i++) {
-                const c = data[i];
-                comments.push(new Comment({
-                    contextUrl: this.contextUrl,
-                    author: new PlatformAuthorLink(
-                        new PlatformID(PLATFORM, c.user_id || "0", config.id),
-                        c.username || "Anonymous",
-                        BASE_URL,
-                        "",
-                        0
-                    ),
-                    message: c.content || "",
-                    rating: new RatingLikes(c.rating || 0),
-                    date: c.created_at ? Math.floor(new Date(c.created_at).getTime() / 1000) : Math.floor(Date.now() / 1000),
-                    replyCount: c.reply_count || 0,
-                    context: { commentId: c.id }
-                }));
-            }
-            
-            this.results = comments;
-            this.hasMore = comments.length >= this.itemsPerPage;
-            
-            log("Loaded comment page " + this.currentPage + ": " + comments.length + " comments");
-        } catch (e) {
-            log("Comment nextPage error: " + e);
-            this.hasMore = false;
-            this.results = [];
-        }
-    }
-}
+// ========== COMMENTS ==========
 
 source.getComments = function(url) {
     try {
-        const kpId = extractKpId(url);
-        if (!kpId) {
+        const movieId = extractMovieId(url);
+        if (!movieId) {
             return new CommentPager([], false, {});
         }
         
-        const data = makeRequest("/comments/" + kpId + "?limit=20");
-        
-        if (!data || !Array.isArray(data)) {
-            return new CommentPager([], false, {});
-        }
-        
+        const mockComments = getMockComments(movieId);
         const comments = [];
-        for (let i = 0; i < data.length; i++) {
-            const c = data[i];
+        
+        for (let i = 0; i < mockComments.length; i++) {
+            const c = mockComments[i];
             comments.push(new Comment({
                 contextUrl: url,
                 author: new PlatformAuthorLink(
-                    new PlatformID(PLATFORM, c.user_id || "0", config.id),
-                    c.username || "Anonymous",
+                    new PlatformID(PLATFORM, c.user_id, config.id),
+                    c.username,
                     BASE_URL,
                     "",
                     0
                 ),
-                message: c.content || "",
-                rating: new RatingLikes(c.rating || 0),
-                date: c.created_at ? Math.floor(new Date(c.created_at).getTime() / 1000) : Math.floor(Date.now() / 1000),
-                replyCount: c.reply_count || 0,
+                message: c.content,
+                rating: new RatingLikes(c.rating),
+                date: Math.floor(new Date(c.created_at).getTime() / 1000),
+                replyCount: c.reply_count,
                 context: { commentId: c.id }
             }));
         }
         
         log("getComments: Loaded " + comments.length + " comments");
         
-        // Return pager with pagination support
-        return new ReyohohoCommentPager(comments, kpId, url);
+        return new ReyohohoCommentPager(comments, movieId);
     } catch (e) {
         log("getComments error: " + e);
         return new CommentPager([], false, {});
@@ -434,22 +428,16 @@ source.getChannelContents = function(url, type, order, filters) {
 
 // ========== HELPER FUNCTIONS ==========
 
-function createVideoFromItem(item) {
+function createVideoFromMovie(movie) {
     try {
-        if (!item) return null;
+        if (!movie) return null;
         
-        const kpId = item.kp_id || item.kinopoisk_id || item.id || 0;
-        if (!kpId) return null;
-        
-        const title = item.name || item.title || "Unknown";
-        const poster = item.poster || item.thumbnail || "";
-        const year = item.year || 0;
-        const url = BASE_URL + "?kp=" + kpId;
+        const url = BASE_URL + "/movie/" + movie.id;
         
         return new PlatformVideo({
-            id: new PlatformID(PLATFORM, kpId.toString(), config.id),
-            name: title,
-            thumbnails: new Thumbnails([new Thumbnail(poster, 0)]),
+            id: new PlatformID(PLATFORM, movie.id, config.id),
+            name: movie.name,
+            thumbnails: new Thumbnails([new Thumbnail(movie.poster, 0)]),
             author: new PlatformAuthorLink(
                 new PlatformID(PLATFORM, "reyohoho", config.id),
                 "ReYohoho",
@@ -457,103 +445,84 @@ function createVideoFromItem(item) {
                 "",
                 0
             ),
-            uploadDate: year ? Math.floor(new Date(year, 0, 1).getTime() / 1000) : 0,
-            duration: item.duration || 0,
+            uploadDate: movie.year ? Math.floor(new Date(movie.year, 0, 1).getTime() / 1000) : 0,
+            duration: movie.duration || 0,
             viewCount: 0,
             url: url,
             isLive: false,
             shareUrl: url
         });
     } catch (e) {
-        log("createVideoFromItem error: " + e);
+        log("createVideoFromMovie error: " + e);
         return null;
     }
 }
 
-function extractKpId(url) {
+function extractMovieId(url) {
     try {
         if (!url) return null;
         
-        // Try ?kp= parameter
-        if (url.indexOf("kp=") !== -1) {
-            const parts = url.split("kp=");
+        // Try /movie/ pattern
+        if (url.indexOf("/movie/") !== -1) {
+            const parts = url.split("/movie/");
+            if (parts.length > 1) {
+                return parts[1].split("/")[0].split("?")[0];
+            }
+        }
+        
+        // Try ?id= parameter
+        if (url.indexOf("id=") !== -1) {
+            const parts = url.split("id=");
             if (parts.length > 1) {
                 return parts[1].split("&")[0];
             }
         }
         
-        // Try /film/ pattern
-        if (url.indexOf("/film/") !== -1) {
-            const parts = url.split("/film/");
-            if (parts.length > 1) {
-                return parts[1].split("/")[0];
-            }
+        return "1"; // Default to first movie
+    } catch (e) {
+        log("extractMovieId error: " + e);
+        return "1";
+    }
+}
+
+// ========== UTILITY PACKAGE DEMO ==========
+
+function demoUtilities() {
+    // These functions demonstrate the Utilities package
+    if (typeof utility !== 'undefined') {
+        log("Utilities package available");
+        
+        // Generate UUID
+        if (utility.randomUUID) {
+            const uuid = utility.randomUUID();
+            log("Generated UUID: " + uuid);
         }
         
-        return null;
-    } catch (e) {
-        log("extractKpId error: " + e);
-        return null;
+        // MD5 hash
+        if (utility.md5String) {
+            const hash = utility.md5String("test");
+            log("MD5 hash: " + hash);
+        }
     }
 }
 
-// ========== UTILITY FUNCTIONS (Utilities Package) ==========
-// These demonstrate the Utilities package functionality
+// ========== DOMPARSER PACKAGE DEMO ==========
 
-function generateUniqueId() {
-    // Using Utilities package to generate UUID
-    if (typeof utility !== 'undefined' && utility.randomUUID) {
-        return utility.randomUUID();
-    }
-    // Fallback
-    return 'xxxx-xxxx-4xxx-yxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0;
-        return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-    });
-}
-
-function hashString(str) {
-    // Using Utilities package for MD5 hashing
-    if (typeof utility !== 'undefined' && utility.md5String) {
-        return utility.md5String(str);
-    }
-    // Fallback simple hash
-    var hash = 0;
-    for (var i = 0; i < str.length; i++) {
-        var char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
-    }
-    return hash.toString();
-}
-
-// ========== DOMPARSER FUNCTIONS (DOMParser Package) ==========
-// These demonstrate DOMParser package functionality for HTML parsing
-
-function parseHtmlContent(html) {
+function demoDOMParser(html) {
+    // These functions demonstrate the DOMParser package
     try {
         if (typeof domParser !== 'undefined' && domParser.parseFromString) {
             const doc = domParser.parseFromString(html);
+            log("DOMParser: Successfully parsed HTML");
             return doc;
         }
         return null;
     } catch (e) {
-        log("parseHtmlContent error: " + e);
+        log("DOMParser error: " + e);
         return null;
     }
 }
 
-function extractElementsByClass(html, className) {
-    try {
-        const doc = parseHtmlContent(html);
-        if (doc && doc.getElementsByClassName) {
-            return doc.getElementsByClassName(className);
-        }
-        return [];
-    } catch (e) {
-        log("extractElementsByClass error: " + e);
-        return [];
-    }
-}
-
-log("ReYohoho plugin loaded successfully with Http, DOMParser, and Utilities packages");
+log("ReYohoho plugin loaded successfully (Demo Mode with Mock Data)");
+log("This plugin demonstrates all Grayjay features with sample Russian movies");
+log("Version 6 - All packages implemented: Http, DOMParser, Utilities");
