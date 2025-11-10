@@ -1,38 +1,41 @@
 {
-	"name": "ReYohoho",
-	"description": "Russian movie and series streaming aggregator with KinoPoisk and Shikimori support",
-	"author": "Luke",
-	"authorUrl": "https://github.com/VonKleistL",
-	    "platformUrl": "https://api.reyohoho.app",
-	
-	"sourceUrl": "https://VonKleistL.github.io/grayjay-reyohoho/ReyohohoConfig.json",
-	"repositoryUrl": "https://github.com/reyohoho/reyohoho",
-	"scriptUrl": "./ReyohohoScript.js",
-    "version": 3,
-	    "iconUrl": "",
-	"id": "a7f3b2c8-reyh-4ee9-9a1b-0242ac120003",
-	
-	"scriptSignature": "",
-	"scriptPublicKey": "",
-	"packages": ["Http"],
-	
-	"allowEval": false,
-	"allowUrls": [
-		"https://reyohoho.github.io",
-		"https://api.reyohoho.app",
-		"https://kinopoisk.ru",
-		"https://shikimori.one",
-		"https://www.imdb.com"
-	],
-	    "supportedClaimTypes": [1],
-	
-	"settings": [
-		{
-			"variable": "apiUrl",
-			"name": "API Endpoint",
-			"description": "ReYohoho API base URL",
-			"type": "text",
-			"default": "https://api.reyohoho.app"
-		}
-	]
+    "name": "ReYohoho",
+    "description": "Russian movie and series streaming aggregator with KinoPoisk and Shikimori support",
+    "author": "Luke",
+    "authorUrl": "https://github.com/VonKleistL",
+        "platformUrl": "https://api.reyohoho.app",
+
+    "sourceUrl": "https://VonKleistL.github.io/grayjay-reyohoho/ReyohohoConfig.json",
+    "repositoryUrl": "https://github.com/VonKleistL/grayjay-reyohoho",
+    "scriptUrl": "https://VonKleistL.github.io/grayjay-reyohoho/ReyohohoScript.js",
+    "version": 4,
+        "iconUrl": "https://api.reyohoho.app/favicon.ico",
+    "id": "a7f3b2c8-reyh-4ee9-9a1b-0242ac120003",
+
+    "scriptSignature": "",
+    "scriptPublicKey": "",
+    "packages": ["Http"],
+
+    "allowEval": false,
+    "allowUrls": [
+        "https://reyohoho.github.io",
+        "https://api.reyohoho.app",
+        "https://api.reyohoho.space",
+        "https://reyohoho-api.vercel.app",
+        "https://kinopoisk.ru",
+        "https://shikimori.one",
+        "https://www.imdb.com"
+    ],
+
+    "supportedClaimTypes": [],
+
+    "settings": [
+        {
+            "variable": "apiUrl",
+            "name": "API Endpoint",
+            "description": "ReYohoho API base URL",
+            "type": "text",
+            "default": "https://api.reyohoho.app"
+        }
+    ]
 }
