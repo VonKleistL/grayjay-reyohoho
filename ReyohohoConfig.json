@@ -3,13 +3,12 @@
     "description": "Russian movie and series streaming aggregator with KinoPoisk and Shikimori support",
     "author": "Luke",
     "authorUrl": "https://github.com/VonKleistL",
-    "platformUrl": "https://api.reyohoho.app",
 
     "sourceUrl": "https://VonKleistL.github.io/grayjay-reyohoho/ReyohohoConfig.json",
     "repositoryUrl": "https://github.com/VonKleistL/grayjay-reyohoho",
     "scriptUrl": "https://VonKleistL.github.io/grayjay-reyohoho/ReyohohoScript.js",
-    "version": 5,
-    "iconUrl": "https://api.reyohoho.app/favicon.ico",
+    "version": 6,
+    "iconUrl": "https://reyohoho-vue.vercel.app/favicon.ico",
     "id": "a7f3b2c8-reyh-4ee9-9a1b-0242ac120003",
 
     "scriptSignature": "",
@@ -18,12 +17,8 @@
 
     "allowEval": false,
     "allowUrls": [
-        "https://reyohoho.github.io",
-        "https://api.reyohoho.app",
-        "https://api.reyohoho.space",
-        "https://reyohoho-api.vercel.app",
         "https://reyohoho-vue.vercel.app",
-        "https://reyohoho-gitlab.vercel.app",
+        "https://reyohoho.github.io",
         "https://kinopoisk.ru",
         "https://shikimori.one",
         "https://www.imdb.com"
@@ -33,11 +28,11 @@
 
     "settings": [
         {
-            "variable": "apiUrl",
-            "name": "API Endpoint",
-            "description": "ReYohoho API base URL",
+            "variable": "baseUrl",
+            "name": "ReYohoho Site",
+            "description": "ReYohoho website base URL",
             "type": "text",
-            "default": "https://api.reyohoho.app"
+            "default": "https://reyohoho-vue.vercel.app"
         }
     ]
 }
